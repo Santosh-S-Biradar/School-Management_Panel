@@ -11,7 +11,14 @@ const createTeacherAssignment = async ({ teacherId, classId, sectionId, subjectI
 
 const listTeacherAssignments = async (teacherId) => {
   return query(
-    `SELECT ta.id, c.name AS class_name, sec.name AS section_name, s.name AS subject_name
+    `SELECT
+      ta.id,
+      ta.class_id,
+      ta.section_id,
+      ta.subject_id,
+      c.name AS class_name,
+      COALESCE(sec.name, 'All Sections') AS section_name,
+      s.name AS subject_name
      FROM teacher_assignments ta
      JOIN classes c ON c.id = ta.class_id
      LEFT JOIN sections sec ON sec.id = ta.section_id

@@ -21,6 +21,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
 import TeacherMarksPage from './pages/TeacherMarksPage';
+import TeacherTimetablePage from './pages/TeacherTimetablePage';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentTimetablePage from './pages/StudentTimetablePage';
 import StudentAttendancePage from './pages/StudentAttendancePage';
@@ -62,6 +63,7 @@ const App = () => (
       <Route path="/admin/notifications" element={<ProtectedRoute roles={['admin']}><NotificationsPage /></ProtectedRoute>} />
 
       <Route path="/teacher" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
+      <Route path="/teacher/timetable" element={<ProtectedRoute roles={['teacher']}><TeacherTimetablePage /></ProtectedRoute>} />
       <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherAttendancePage /></ProtectedRoute>} />
       <Route path="/teacher/assignments" element={<ProtectedRoute roles={['teacher']}><TeacherAssignmentsPage /></ProtectedRoute>} />
       <Route path="/teacher/marks" element={<ProtectedRoute roles={['teacher']}><TeacherMarksPage /></ProtectedRoute>} />

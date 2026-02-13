@@ -21,7 +21,13 @@ const StudentTimetablePage = () => {
         ) : (
           <DataTable
             columns={['Day', 'Start', 'End', 'Subject', 'Teacher']}
-            rows={timetable.map((t) => [t.day_of_week, t.start_time, t.end_time, t.subject_name, t.teacher_name])}
+            rows={timetable.map((t) => [
+              t.day_of_week,
+              t.start_time,
+              t.end_time,
+              t.entry_type === 'break' ? (t.title || 'Break') : (t.subject_name || '-'),
+              t.entry_type === 'break' ? '-' : (t.teacher_name || '-')
+            ])}
           />
         )}
       </div>

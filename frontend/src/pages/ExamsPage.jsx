@@ -72,7 +72,7 @@ const ExamsPage = () => {
         ...subjectForm,
         examId: Number(subjectForm.examId),
         classId: Number(subjectForm.classId),
-        sectionId: Number(subjectForm.sectionId),
+        sectionId: subjectForm.sectionId ? Number(subjectForm.sectionId) : null,
         subjectId: Number(subjectForm.subjectId),
         maxMarks: Number(subjectForm.maxMarks)
       });
@@ -115,8 +115,8 @@ const ExamsPage = () => {
             <option value="">Select class</option>
             {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          <select className="rounded-xl border border-slate-200 px-4 py-3 text-sm" value={subjectForm.sectionId} onChange={(e) => setSubjectForm({ ...subjectForm, sectionId: e.target.value })} required>
-            <option value="">Select section</option>
+          <select className="rounded-xl border border-slate-200 px-4 py-3 text-sm" value={subjectForm.sectionId} onChange={(e) => setSubjectForm({ ...subjectForm, sectionId: e.target.value })}>
+            <option value="">All sections (optional)</option>
             {sections.filter((s) => !subjectForm.classId || String(s.class_id) === String(subjectForm.classId)).map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}

@@ -21,10 +21,22 @@ const getAttendanceByStudent = async (studentId) => {
 
 const getAttendanceOverview = async () => {
   return query(
-    `SELECT date, status, COUNT(*) AS count
-     FROM attendance
-     GROUP BY date, status
-     ORDER BY date DESC`
+    `SELECT
+      c.id AS class_id,
+      c.name AS class_name,
+      COALESCE(sec.name, 'All Sections') AS section_name,
+      COUNT(a.id) AS total_records,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS present_count,
+      ROUND(
+        (SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0)) * 100,
+        2
+      ) AS attendance_percentage
+     FROM attendance a
+     JOIN students s ON s.id = a.student_id
+     LEFT JOIN classes c ON c.id = s.class_id
+     LEFT JOIN sections sec ON sec.id = s.section_id
+     GROUP BY c.id, c.name, sec.id, sec.name
+     ORDER BY c.id ASC, section_name ASC`
   );
 };
 

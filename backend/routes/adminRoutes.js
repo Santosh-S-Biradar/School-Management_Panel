@@ -74,16 +74,20 @@ router.post('/teacher-assignments', [
 
 router.post('/timetables', [
   body('classId').isInt(),
-  body('sectionId').isInt(),
+  body('sectionId').optional({ nullable: true }).isInt(),
   body('dayOfWeek').notEmpty(),
   body('startTime').notEmpty(),
   body('endTime').notEmpty(),
-  body('subjectId').isInt(),
-  body('teacherId').isInt()
+  body('entryType').optional().isIn(['lecture', 'break']),
+  body('title').optional({ nullable: true }).isString(),
+  body('subjectId').optional({ nullable: true }).isInt(),
+  body('teacherId').optional({ nullable: true }).isInt()
 ], validate, admin.createTimetable);
+router.get('/timetables/classes', admin.listTimetableClasses);
 router.get('/timetables', admin.listTimetables);
 router.put('/timetables/:id', admin.updateTimetable);
 router.delete('/timetables/:id', admin.deleteTimetable);
+router.delete('/timetables/class/:classId', admin.deleteTimetableGroup);
 
 router.post('/exams', [
   body('name').notEmpty(),
@@ -96,7 +100,7 @@ router.delete('/exams/:id', admin.deleteExam);
 router.post('/exam-subjects', [
   body('examId').isInt(),
   body('classId').isInt(),
-  body('sectionId').isInt(),
+  body('sectionId').optional({ nullable: true }).isInt(),
   body('subjectId').isInt(),
   body('maxMarks').isInt()
 ], validate, admin.addExamSubject);

@@ -40,7 +40,7 @@ const StudentsPage = () => {
   const { query } = useSearch();
 
   const load = async () => {
-    const { data } = await api.get('/admin/students?page=1&limit=10');
+    const { data } = await api.get('/admin/students?page=1&limit=1000');
     setStudents(data.data || []);
   };
 
@@ -220,9 +220,8 @@ const StudentsPage = () => {
         {students.length === 0 ? (
           <EmptyState title="No students yet" description="Create a student profile to start tracking attendance and academics." />
         ) : (
-          <DataTable
-            columns={['Admission No', 'Name', 'Email', 'Class', 'Section', 'Actions']}
-            rows={students
+          Object.entries(
+            students
               .filter((s) => {
                 if (!query) return true;
                 const q = query.toLowerCase();
@@ -234,32 +233,44 @@ const StudentsPage = () => {
                   s.section_name?.toLowerCase().includes(q)
                 );
               })
-              .map((s) => [
-                s.admission_no,
-                s.name,
-                s.email,
-                s.class_name || '-',
-                s.section_name || '-',
-                <div key={`actions-${s.id}`} className="flex gap-3">
-                  <button onClick={() => startEdit(s.id)} className="text-brand-600 font-semibold">Edit</button>
-                  <button
-                    onClick={async () => {
-                      if (!window.confirm('Delete this student?')) return;
-                      try {
-                        await api.delete(`/admin/students/${s.id}`);
-                        toast.success('Student deleted');
-                        await load();
-                      } catch (err) {
-                        toast.error(err.friendlyMessage || 'Failed to delete student');
-                      }
-                    }}
-                    className="text-red-600 font-semibold"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ])}
-          />
+              .reduce((acc, s) => {
+                const key = s.class_name || 'Unassigned';
+                acc[key] = acc[key] || [];
+                acc[key].push(s);
+                return acc;
+              }, {})
+          ).map(([className, list]) => (
+            <div key={className} className="mb-6">
+              <div className="mb-2 text-sm font-semibold text-ink-700">{className}</div>
+              <DataTable
+                columns={['Admission No', 'Name', 'Email', 'Section', 'Actions']}
+                rows={list.map((s) => [
+                  s.admission_no,
+                  s.name,
+                  s.email,
+                  s.section_name || '-',
+                  <div key={`actions-${s.id}`} className="flex gap-3">
+                    <button onClick={() => startEdit(s.id)} className="text-brand-600 font-semibold">Edit</button>
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm('Delete this student?')) return;
+                        try {
+                          await api.delete(`/admin/students/${s.id}`);
+                          toast.success('Student deleted');
+                          await load();
+                        } catch (err) {
+                          toast.error(err.friendlyMessage || 'Failed to delete student');
+                        }
+                      }}
+                      className="text-red-600 font-semibold"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ])}
+              />
+            </div>
+          ))
         )}
       </div>
     </AppLayout>

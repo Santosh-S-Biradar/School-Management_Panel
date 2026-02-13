@@ -24,4 +24,24 @@ const getMarksByStudent = async (studentId) => {
   );
 };
 
-module.exports = { upsertMarks, getMarksByStudent };
+const getMarksSheet = async (examSubjectId, classId, sectionId) => {
+  return query(
+    `SELECT
+      s.id AS student_id,
+      s.admission_no,
+      u.name AS student_name,
+      m.marks,
+      m.grade
+     FROM students s
+     JOIN users u ON u.id = s.user_id
+     LEFT JOIN marks m
+       ON m.student_id = s.id
+      AND m.exam_subject_id = ?
+     WHERE s.class_id = ?
+       AND (? IS NULL OR s.section_id = ?)
+     ORDER BY u.name ASC`,
+    [examSubjectId, classId, sectionId || null, sectionId || null]
+  );
+};
+
+module.exports = { upsertMarks, getMarksByStudent, getMarksSheet };

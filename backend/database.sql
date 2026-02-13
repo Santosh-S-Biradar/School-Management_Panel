@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS school_management;
+CREATE DATABASE IF NOT EXISTS school_management ;
 USE school_management;
 
 CREATE TABLE roles (
@@ -102,12 +102,14 @@ CREATE TABLE teacher_assignments (
 CREATE TABLE timetables (
   id INT AUTO_INCREMENT PRIMARY KEY,
   class_id INT NOT NULL,
-  section_id INT NOT NULL,
+  section_id INT NULL,
   day_of_week ENUM('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  subject_id INT NOT NULL,
-  teacher_id INT NOT NULL,
+  entry_type ENUM('lecture','break') NOT NULL DEFAULT 'lecture',
+  title VARCHAR(80) NULL,
+  subject_id INT NULL,
+  teacher_id INT NULL,
   room VARCHAR(20),
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
   FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE CASCADE,
@@ -169,7 +171,7 @@ CREATE TABLE exam_subjects (
   id INT AUTO_INCREMENT PRIMARY KEY,
   exam_id INT NOT NULL,
   class_id INT NOT NULL,
-  section_id INT NOT NULL,
+  section_id INT NULL,
   subject_id INT NOT NULL,
   max_marks INT NOT NULL,
   FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,

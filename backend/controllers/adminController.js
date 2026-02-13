@@ -391,7 +391,46 @@ const assignTeacher = async (req, res, next) => {
 
 const createTimetable = async (req, res, next) => {
   try {
-    const id = await timetableModel.createTimetable(req.body);
+    const entryType = req.body.entryType || 'lecture';
+    if (entryType !== 'lecture' && entryType !== 'break') {
+      return res.status(400).json({ message: 'Invalid entry type' });
+    }
+    if (entryType === 'lecture' && (!req.body.subjectId || !req.body.teacherId)) {
+      return res.status(400).json({ message: 'Lecture requires subject and teacher' });
+    }
+    if (entryType === 'break' && !req.body.title) {
+      return res.status(400).json({ message: 'Break requires title' });
+    }
+
+    const classConflict = await timetableModel.hasClassConflict({
+      classId: req.body.classId,
+      dayOfWeek: req.body.dayOfWeek,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime
+    });
+    if (classConflict) {
+      return res.status(409).json({ message: 'Class has an overlapping timetable period' });
+    }
+
+    if (entryType === 'lecture') {
+      const teacherConflict = await timetableModel.hasTeacherConflict({
+        teacherId: req.body.teacherId,
+        dayOfWeek: req.body.dayOfWeek,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime
+      });
+      if (teacherConflict) {
+        return res.status(409).json({ message: 'Teacher has an overlapping timetable period' });
+      }
+    }
+
+    const id = await timetableModel.createTimetable({
+      ...req.body,
+      entryType,
+      title: entryType === 'break' ? req.body.title : null,
+      subjectId: entryType === 'lecture' ? req.body.subjectId : null,
+      teacherId: entryType === 'lecture' ? req.body.teacherId : null
+    });
     res.status(201).json({ id });
   } catch (err) {
     next(err);
@@ -400,19 +439,64 @@ const createTimetable = async (req, res, next) => {
 
 const updateTimetable = async (req, res, next) => {
   try {
+    const entryType = req.body.entryType || 'lecture';
+    if (entryType !== 'lecture' && entryType !== 'break') {
+      return res.status(400).json({ message: 'Invalid entry type' });
+    }
+    if (entryType === 'lecture' && (!req.body.subjectId || !req.body.teacherId)) {
+      return res.status(400).json({ message: 'Lecture requires subject and teacher' });
+    }
+    if (entryType === 'break' && !req.body.title) {
+      return res.status(400).json({ message: 'Break requires title' });
+    }
+
+    const classConflict = await timetableModel.hasClassConflict({
+      classId: req.body.classId,
+      dayOfWeek: req.body.dayOfWeek,
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+      excludeId: req.params.id
+    });
+    if (classConflict) {
+      return res.status(409).json({ message: 'Class has an overlapping timetable period' });
+    }
+
+    if (entryType === 'lecture') {
+      const teacherConflict = await timetableModel.hasTeacherConflict({
+        teacherId: req.body.teacherId,
+        dayOfWeek: req.body.dayOfWeek,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        excludeId: req.params.id
+      });
+      if (teacherConflict) {
+        return res.status(409).json({ message: 'Teacher has an overlapping timetable period' });
+      }
+    }
+
     const mapped = {
       class_id: req.body.classId,
       section_id: req.body.sectionId,
       day_of_week: req.body.dayOfWeek,
       start_time: req.body.startTime,
       end_time: req.body.endTime,
-      subject_id: req.body.subjectId,
-      teacher_id: req.body.teacherId,
+      entry_type: entryType,
+      title: entryType === 'break' ? req.body.title : null,
+      subject_id: entryType === 'lecture' ? req.body.subjectId : null,
+      teacher_id: entryType === 'lecture' ? req.body.teacherId : null,
       room: req.body.room
     };
     Object.keys(mapped).forEach((k) => mapped[k] === undefined && delete mapped[k]);
     await timetableModel.updateTimetable(req.params.id, mapped);
     res.json({ message: 'Timetable updated' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const listTimetableClasses = async (req, res, next) => {
+  try {
+    res.json(await timetableModel.listTimetableClasses());
   } catch (err) {
     next(err);
   }
@@ -431,6 +515,17 @@ const deleteTimetable = async (req, res, next) => {
   try {
     await timetableModel.deleteTimetable(req.params.id);
     res.json({ message: 'Timetable deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const deleteTimetableGroup = async (req, res, next) => {
+  try {
+    const classId = Number(req.params.classId);
+    const sectionId = req.query.sectionId ? Number(req.query.sectionId) : null;
+    await timetableModel.deleteTimetableGroup(classId, sectionId);
+    res.json({ message: 'Timetable group deleted' });
   } catch (err) {
     next(err);
   }
@@ -479,7 +574,14 @@ const deleteExam = async (req, res, next) => {
 
 const addExamSubject = async (req, res, next) => {
   try {
-    const id = await examModel.addExamSubject(req.body);
+    const payload = {
+      examId: req.body.examId,
+      classId: req.body.classId,
+      sectionId: req.body.sectionId || null,
+      subjectId: req.body.subjectId,
+      maxMarks: req.body.maxMarks
+    };
+    const id = await examModel.addExamSubject(payload);
     res.status(201).json({ id });
   } catch (err) {
     next(err);
@@ -649,9 +751,11 @@ module.exports = {
   deleteSubject,
   assignTeacher,
   createTimetable,
+  listTimetableClasses,
   updateTimetable,
   listTimetables,
   deleteTimetable,
+  deleteTimetableGroup,
   createExam,
   listExams,
   updateExam,

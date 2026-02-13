@@ -33,18 +33,29 @@ const addExamSubject = async (payload) => {
   const result = await query(
     `INSERT INTO exam_subjects (exam_id, class_id, section_id, subject_id, max_marks)
      VALUES (?, ?, ?, ?, ?)`
-    , [payload.examId, payload.classId, payload.sectionId, payload.subjectId, payload.maxMarks]
+    , [payload.examId, payload.classId, payload.sectionId || null, payload.subjectId, payload.maxMarks]
   );
   return result.insertId;
 };
 
 const listExamSubjects = async (examId, classId, sectionId) => {
+  if (sectionId) {
+    return query(
+      `SELECT es.*, s.name AS subject_name, COALESCE(sec.name, 'All Sections') AS section_name
+       FROM exam_subjects es
+       JOIN subjects s ON s.id = es.subject_id
+       LEFT JOIN sections sec ON sec.id = es.section_id
+       WHERE es.exam_id = ? AND es.class_id = ? AND (es.section_id = ? OR es.section_id IS NULL)`,
+      [examId, classId, sectionId]
+    );
+  }
   return query(
-    `SELECT es.*, s.name AS subject_name
+    `SELECT es.*, s.name AS subject_name, COALESCE(sec.name, 'All Sections') AS section_name
      FROM exam_subjects es
      JOIN subjects s ON s.id = es.subject_id
-     WHERE es.exam_id = ? AND es.class_id = ? AND es.section_id = ?`,
-    [examId, classId, sectionId]
+     LEFT JOIN sections sec ON sec.id = es.section_id
+     WHERE es.exam_id = ? AND es.class_id = ?`,
+    [examId, classId]
   );
 };
 

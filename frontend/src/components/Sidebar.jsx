@@ -31,6 +31,7 @@ const menuByRole = {
   ],
   teacher: [
     { key: 'dashboard', label: 'Dashboard', to: '/teacher' },
+    { key: 'timetable', label: 'Timetable', to: '/teacher/timetable' },
     { key: 'attendance', label: 'Attendance', to: '/teacher/attendance' },
     { key: 'exams', label: 'Marks & Grades', to: '/teacher/marks' },
     { key: 'subjects', label: 'Assignments', to: '/teacher/assignments' },

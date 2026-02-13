@@ -10,6 +10,10 @@ router.use(auth, role(ROLES.TEACHER));
 
 router.get('/dashboard', teacher.dashboard);
 router.get('/assigned-classes', teacher.assignedClasses);
+router.get('/timetable', teacher.timetable);
+router.get('/exams', teacher.listExams);
+router.get('/exam-subjects', teacher.listExamSubjects);
+router.get('/marks-sheet', teacher.marksSheet);
 router.get('/students', teacher.listStudentsByClass);
 router.post('/attendance', teacher.markAttendance);
 router.post('/assignments', teacher.uploadAssignment);
