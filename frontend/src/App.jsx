@@ -22,6 +22,8 @@ import TeacherAttendancePage from './pages/TeacherAttendancePage';
 import TeacherAssignmentsPage from './pages/TeacherAssignmentsPage';
 import TeacherMarksPage from './pages/TeacherMarksPage';
 import TeacherTimetablePage from './pages/TeacherTimetablePage';
+import TeacherSubjectsPage from './pages/TeacherSubjectsPage';
+import TeacherMaterialsPage from './pages/TeacherMaterialsPage';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentTimetablePage from './pages/StudentTimetablePage';
 import StudentAttendancePage from './pages/StudentAttendancePage';
@@ -64,8 +66,10 @@ const App = () => (
 
       <Route path="/teacher" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
       <Route path="/teacher/timetable" element={<ProtectedRoute roles={['teacher']}><TeacherTimetablePage /></ProtectedRoute>} />
+      <Route path="/teacher/subjects" element={<ProtectedRoute roles={['teacher']}><TeacherSubjectsPage /></ProtectedRoute>} />
       <Route path="/teacher/attendance" element={<ProtectedRoute roles={['teacher']}><TeacherAttendancePage /></ProtectedRoute>} />
       <Route path="/teacher/assignments" element={<ProtectedRoute roles={['teacher']}><TeacherAssignmentsPage /></ProtectedRoute>} />
+      <Route path="/teacher/materials" element={<ProtectedRoute roles={['teacher']}><TeacherMaterialsPage /></ProtectedRoute>} />
       <Route path="/teacher/marks" element={<ProtectedRoute roles={['teacher']}><TeacherMarksPage /></ProtectedRoute>} />
       <Route path="/teacher/notifications" element={<ProtectedRoute roles={['teacher']}><NotificationsPage /></ProtectedRoute>} />
 

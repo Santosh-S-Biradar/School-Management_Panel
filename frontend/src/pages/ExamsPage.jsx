@@ -9,6 +9,7 @@ import { useSearch } from '../context/SearchContext';
 
 const ExamsPage = () => {
   const [exams, setExams] = useState([]);
+  const [examSubjects, setExamSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -21,16 +22,18 @@ const ExamsPage = () => {
 
   useEffect(() => {
     const boot = async () => {
-      const [{ data: examData }, { data: classData }, { data: sectionData }, { data: subjectData }] = await Promise.all([
+      const [{ data: examData }, { data: classData }, { data: sectionData }, { data: subjectData }, { data: examSubjectData }] = await Promise.all([
         api.get('/admin/exams'),
         api.get('/admin/classes'),
         api.get('/admin/sections'),
-        api.get('/admin/subjects')
+        api.get('/admin/subjects'),
+        api.get('/admin/exam-subjects')
       ]);
       setExams(examData || []);
       setClasses(classData || []);
       setSections(sectionData || []);
       setSubjects(subjectData || []);
+      setExamSubjects(examSubjectData || []);
     };
     boot().catch(() => {});
   }, []);
@@ -79,6 +82,8 @@ const ExamsPage = () => {
       toast.success('Exam subject added');
       setShowSubjectForm(false);
       setSubjectForm({ examId: '', classId: '', sectionId: '', subjectId: '', maxMarks: 100 });
+      const { data } = await api.get('/admin/exam-subjects');
+      setExamSubjects(data || []);
     } catch (err) {
       toast.error(err.friendlyMessage || 'Failed to add exam subject');
     }
@@ -170,6 +175,56 @@ const ExamsPage = () => {
               ])}
           />
         )}
+      </div>
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-ink-900">Assigned Subjects (Classwise)</h3>
+            <p className="mt-1 text-sm text-ink-500">View all subjects mapped to each exam, class and section.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSubjectForm(true)}
+            className="rounded-xl bg-ink-900 px-4 py-2 text-sm font-semibold text-white"
+          >
+            Add Subject
+          </button>
+        </div>
+        <div className="mt-4">
+          {examSubjects.length === 0 ? (
+            <EmptyState title="No subject assignments" description="Use 'Assign Subjects' to map subjects exam-wise." />
+          ) : (
+            <DataTable
+              columns={['Exam', 'Class', 'Section', 'Subject', 'Max Marks', 'Actions']}
+              rows={examSubjects.map((es) => [
+                es.exam_name,
+                es.class_name,
+                es.section_name || 'All Sections',
+                es.subject_name,
+                es.max_marks,
+                <button
+                  key={`delete-exam-subject-${es.id}`}
+                  type="button"
+                  onClick={async () => {
+                    if (!window.confirm('Delete this assigned subject?')) return;
+                    try {
+                      await api.delete(`/admin/exam-subjects/${es.id}`);
+                      toast.success('Assigned subject deleted');
+                      const { data } = await api.get('/admin/exam-subjects');
+                      setExamSubjects(data || []);
+                    } catch (err) {
+                      toast.error(err.friendlyMessage || 'Failed to delete assigned subject');
+                    }
+                  }}
+                  className="text-red-600 font-semibold"
+                >
+                  Delete
+                </button>
+              ])}
+            />
+          )}
+        </div>
       </div>
     </AppLayout>
   );

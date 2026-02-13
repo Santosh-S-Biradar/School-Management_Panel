@@ -36,11 +36,11 @@ const getMarksSheet = async (examSubjectId, classId, sectionId) => {
      JOIN users u ON u.id = s.user_id
      LEFT JOIN marks m
        ON m.student_id = s.id
-      AND m.exam_subject_id = ?
+      AND (? IS NOT NULL AND m.exam_subject_id = ?)
      WHERE s.class_id = ?
        AND (? IS NULL OR s.section_id = ?)
      ORDER BY u.name ASC`,
-    [examSubjectId, classId, sectionId || null, sectionId || null]
+    [examSubjectId || null, examSubjectId || null, classId, sectionId || null, sectionId || null]
   );
 };
 

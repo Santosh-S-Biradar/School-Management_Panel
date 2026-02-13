@@ -588,6 +588,15 @@ const addExamSubject = async (req, res, next) => {
   }
 };
 
+const deleteExamSubject = async (req, res, next) => {
+  try {
+    await examModel.deleteExamSubject(req.params.id);
+    res.json({ message: 'Exam subject deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const listExamSubjects = async (req, res, next) => {
   try {
     const { examId, classId, sectionId } = req.query;
@@ -761,6 +770,7 @@ module.exports = {
   updateExam,
   deleteExam,
   addExamSubject,
+  deleteExamSubject,
   listExamSubjects,
   upsertMarks,
   createFee,

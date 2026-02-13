@@ -105,6 +105,7 @@ router.post('/exam-subjects', [
   body('maxMarks').isInt()
 ], validate, admin.addExamSubject);
 router.get('/exam-subjects', admin.listExamSubjects);
+router.delete('/exam-subjects/:id', admin.deleteExamSubject);
 
 router.post('/marks', admin.upsertMarks);
 

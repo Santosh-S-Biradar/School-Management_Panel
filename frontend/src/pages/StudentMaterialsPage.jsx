@@ -4,6 +4,14 @@ import PageHeader from '../components/PageHeader';
 import EmptyState from '../components/EmptyState';
 import { api } from '../services/api';
 
+const resolveFileUrl = (fileUrl) => {
+  if (!fileUrl) return '';
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const serverBase = apiBase.replace(/\/api\/?$/, '');
+  return `${serverBase}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+};
+
 const StudentMaterialsPage = () => {
   const [items, setItems] = useState([]);
 
@@ -24,7 +32,7 @@ const StudentMaterialsPage = () => {
                 <div className="text-sm font-semibold text-ink-900">{item.title}</div>
                 <div className="mt-2 text-sm text-ink-600">{item.description}</div>
                 {item.file_url && (
-                  <a className="mt-3 inline-block text-sm font-semibold text-brand-600" href={item.file_url}>
+                  <a className="mt-3 inline-block text-sm font-semibold text-brand-600" href={resolveFileUrl(item.file_url)} target="_blank" rel="noreferrer">
                     Download
                   </a>
                 )}

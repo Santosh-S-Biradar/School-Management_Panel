@@ -9,14 +9,14 @@ const GRADE_OPTIONS = ['', 'A+', 'A', 'B+', 'B', 'C', 'D', 'F'];
 
 const TeacherMarksPage = () => {
   const [assignments, setAssignments] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [exams, setExams] = useState([]);
-  const [examSubjects, setExamSubjects] = useState([]);
   const [sheet, setSheet] = useState([]);
 
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedSectionId, setSelectedSectionId] = useState('');
   const [selectedExamId, setSelectedExamId] = useState('');
-  const [selectedExamSubjectId, setSelectedExamSubjectId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
 
   const [loadingSheet, setLoadingSheet] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -62,10 +62,10 @@ const TeacherMarksPage = () => {
     return options;
   }, [assignments, selectedClassId]);
 
-  const loadExamSubjects = async () => {
+  const loadSubjects = async () => {
     if (!selectedClassId || !selectedExamId) {
-      setExamSubjects([]);
-      setSelectedExamSubjectId('');
+      setSubjects([]);
+      setSelectedSubjectId('');
       return;
     }
     try {
@@ -73,31 +73,39 @@ const TeacherMarksPage = () => {
         ? `?examId=${selectedExamId}&classId=${selectedClassId}&sectionId=${selectedSectionId}`
         : `?examId=${selectedExamId}&classId=${selectedClassId}`;
       const { data } = await api.get(`/teacher/exam-subjects${query}`);
-      setExamSubjects(data || []);
-      setSelectedExamSubjectId('');
-      setSheet([]);
+      const seen = new Set();
+      const mapped = [];
+      (data || []).forEach((row) => {
+        const id = String(row.subject_id);
+        if (!seen.has(id)) {
+          seen.add(id);
+          mapped.push({ id: row.subject_id, name: row.subject_name });
+        }
+      });
+      setSubjects(mapped);
+      setSelectedSubjectId('');
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Failed to load exam subjects');
-      setExamSubjects([]);
-      setSelectedExamSubjectId('');
-      setSheet([]);
+      toast.error(err.friendlyMessage || 'Failed to load subjects');
+      setSubjects([]);
+      setSelectedSubjectId('');
     }
   };
 
   useEffect(() => {
-    loadExamSubjects().catch(() => {});
+    loadSubjects().catch(() => {});
   }, [selectedClassId, selectedSectionId, selectedExamId]);
 
   const loadSheet = async () => {
-    if (!selectedClassId || !selectedExamSubjectId) {
+    if (!selectedClassId || !selectedExamId || !selectedSubjectId) {
       setSheet([]);
       return;
     }
+
     setLoadingSheet(true);
     try {
       const query = selectedSectionId
-        ? `?examSubjectId=${selectedExamSubjectId}&classId=${selectedClassId}&sectionId=${selectedSectionId}`
-        : `?examSubjectId=${selectedExamSubjectId}&classId=${selectedClassId}`;
+        ? `?classId=${selectedClassId}&sectionId=${selectedSectionId}&examId=${selectedExamId}&subjectId=${selectedSubjectId}`
+        : `?classId=${selectedClassId}&examId=${selectedExamId}&subjectId=${selectedSubjectId}`;
       const { data } = await api.get(`/teacher/marks-sheet${query}`);
       setSheet((data || []).map((row) => ({
         ...row,
@@ -105,7 +113,7 @@ const TeacherMarksPage = () => {
         grade: row.grade || ''
       })));
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Failed to load marks sheet');
+      toast.error(err.friendlyMessage || 'Failed to load students');
       setSheet([]);
     } finally {
       setLoadingSheet(false);
@@ -114,19 +122,19 @@ const TeacherMarksPage = () => {
 
   useEffect(() => {
     loadSheet().catch(() => {});
-  }, [selectedExamSubjectId]);
+  }, [selectedClassId, selectedSectionId, selectedExamId, selectedSubjectId]);
 
   const updateRow = (studentId, key, value) => {
     setSheet((prev) => prev.map((row) => (row.student_id === studentId ? { ...row, [key]: value } : row)));
   };
 
   const saveMarks = async () => {
-    if (!selectedExamSubjectId) {
-      toast.error('Select subject');
+    if (!selectedClassId || !selectedExamId || !selectedSubjectId) {
+      toast.error('Select class, exam and subject');
       return;
     }
     if (!sheet.length) {
-      toast.error('No students to save');
+      toast.error('No students found');
       return;
     }
 
@@ -140,17 +148,22 @@ const TeacherMarksPage = () => {
       return;
     }
 
-    const records = validRows.map((row) => ({
-      examSubjectId: Number(selectedExamSubjectId),
-      studentId: row.student_id,
-      marks: Number(row.marks),
-      grade: row.grade || null
-    }));
+    const payload = {
+      examId: Number(selectedExamId),
+      classId: Number(selectedClassId),
+      sectionId: selectedSectionId ? Number(selectedSectionId) : null,
+      subjectId: Number(selectedSubjectId),
+      records: validRows.map((row) => ({
+        studentId: row.student_id,
+        marks: Number(row.marks),
+        grade: row.grade || null
+      }))
+    };
 
     setSaving(true);
     try {
-      await api.post('/teacher/marks', { records });
-      toast.success('Marks updated successfully');
+      await api.post('/teacher/marks', payload);
+      toast.success('Marks saved');
       await loadSheet();
     } catch (err) {
       toast.error(err.friendlyMessage || 'Failed to save marks');
@@ -161,7 +174,7 @@ const TeacherMarksPage = () => {
 
   return (
     <AppLayout>
-      <PageHeader title="Marks & Grades" subtitle="Select class, exam and subject to update student marks and grades." />
+      <PageHeader title="Marks & Grades" subtitle="Select class, optional section, exam and subject to update marks." />
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -184,7 +197,7 @@ const TeacherMarksPage = () => {
             onChange={(e) => setSelectedSectionId(e.target.value)}
             className="rounded-xl border border-slate-200 px-4 py-3 text-sm"
           >
-            <option value="">All sections</option>
+            <option value="">All sections (optional)</option>
             {sectionOptions
               .filter((s) => s.sectionId)
               .map((s) => (
@@ -204,27 +217,25 @@ const TeacherMarksPage = () => {
           </select>
 
           <select
-            value={selectedExamSubjectId}
-            onChange={(e) => setSelectedExamSubjectId(e.target.value)}
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
             className="rounded-xl border border-slate-200 px-4 py-3 text-sm"
           >
             <option value="">Select subject</option>
-            {examSubjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.subject_name} ({s.section_name || 'All Sections'})
-              </option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </div>
       </div>
 
       <div className="mt-6">
-        {!selectedClassId || !selectedExamId || !selectedExamSubjectId ? (
-          <EmptyState title="Select required filters" description="Choose class, exam and subject to load students." />
+        {!selectedClassId || !selectedExamId || !selectedSubjectId ? (
+          <EmptyState title="Select filters" description="Choose class, optional section, exam and subject to load students." />
         ) : loadingSheet ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-ink-600">Loading marks sheet...</div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-ink-600">Loading students...</div>
         ) : sheet.length === 0 ? (
-          <EmptyState title="No students found" description="No student records are available for the selected class/section." />
+          <EmptyState title="No students found" description="No students are available for this class/section." />
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <table className="min-w-full text-sm">

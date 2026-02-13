@@ -5,9 +5,17 @@ import PageHeader from '../components/PageHeader';
 import EmptyState from '../components/EmptyState';
 import { api } from '../services/api';
 
-const TeacherAssignmentsPage = () => {
+const resolveFileUrl = (fileUrl) => {
+  if (!fileUrl) return '';
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const serverBase = apiBase.replace(/\/api\/?$/, '');
+  return `${serverBase}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+};
+
+const TeacherMaterialsPage = () => {
   const [showForm, setShowForm] = useState(false);
-  const [assignments, setAssignments] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [teacherClasses, setTeacherClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -18,16 +26,16 @@ const TeacherAssignmentsPage = () => {
     subjectId: '',
     title: '',
     description: '',
-    dueDate: ''
+    fileUrl: ''
   });
 
-  const loadAssignments = async () => {
-    const { data } = await api.get('/teacher/assignments');
-    setAssignments(data || []);
+  const loadMaterials = async () => {
+    const { data } = await api.get('/teacher/materials');
+    setMaterials(data || []);
   };
 
   useEffect(() => {
-    Promise.all([api.get('/teacher/assigned-classes'), loadAssignments()])
+    Promise.all([api.get('/teacher/assigned-classes'), loadMaterials()])
       .then(([assigned]) => {
         setTeacherClasses(assigned.data || []);
       })
@@ -91,15 +99,15 @@ const TeacherAssignmentsPage = () => {
 
     setSubmitting(true);
     try {
-      await api.post('/teacher/assignments', {
+      await api.post('/teacher/materials', {
         classId: form.classId ? Number(form.classId) : null,
         sectionId: form.sectionId ? Number(form.sectionId) : null,
         subjectId: Number(form.subjectId),
         title: form.title.trim(),
         description: form.description?.trim() || '',
-        dueDate: form.dueDate || null
+        fileUrl: form.fileUrl?.trim() || ''
       });
-      toast.success('Assignment posted');
+      toast.success('Material posted');
       setShowForm(false);
       setForm({
         classId: '',
@@ -107,11 +115,11 @@ const TeacherAssignmentsPage = () => {
         subjectId: '',
         title: '',
         description: '',
-        dueDate: ''
+        fileUrl: ''
       });
-      await loadAssignments();
+      await loadMaterials();
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Failed to post assignment');
+      toast.error(err.friendlyMessage || 'Failed to post material');
     } finally {
       setSubmitting(false);
     }
@@ -120,15 +128,15 @@ const TeacherAssignmentsPage = () => {
   return (
     <AppLayout>
       <PageHeader
-        title="Assignments"
-        subtitle="Create and post assignments to any class you teach."
+        title="Materials"
+        subtitle="Create and share study materials with your classes."
         action={(
           <button
             type="button"
             onClick={() => setShowForm((prev) => !prev)}
             className="rounded-xl bg-ink-900 px-4 py-2 text-sm font-semibold text-white"
           >
-            {showForm ? 'Close' : 'Create Assignment'}
+            {showForm ? 'Close' : 'Add Material'}
           </button>
         )}
       />
@@ -173,15 +181,15 @@ const TeacherAssignmentsPage = () => {
             <input
               value={form.title}
               onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-              placeholder="Assignment title"
+              placeholder="Material title"
               className="rounded-xl border border-slate-200 px-4 py-3 text-sm md:col-span-2"
               required
             />
 
             <input
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => setForm((prev) => ({ ...prev, dueDate: e.target.value }))}
+              value={form.fileUrl}
+              onChange={(e) => setForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+              placeholder="File URL (optional)"
               className="rounded-xl border border-slate-200 px-4 py-3 text-sm"
             />
           </div>
@@ -190,7 +198,7 @@ const TeacherAssignmentsPage = () => {
             value={form.description}
             onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
             rows={4}
-            placeholder="Assignment description"
+            placeholder="Description"
             className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
           />
 
@@ -200,18 +208,18 @@ const TeacherAssignmentsPage = () => {
               disabled={submitting}
               className="rounded-xl bg-ink-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {submitting ? 'Posting...' : 'Post Assignment'}
+              {submitting ? 'Posting...' : 'Post Material'}
             </button>
           </div>
         </form>
       )}
 
       <div className="mt-6">
-        {assignments.length === 0 ? (
-          <EmptyState title="No assignments" description="Assignments created by you will appear here." />
+        {materials.length === 0 ? (
+          <EmptyState title="No materials" description="Materials posted by you will appear here." />
         ) : (
           <div className="space-y-4">
-            {assignments.map((item) => (
+            {materials.map((item) => (
               <div key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -220,9 +228,13 @@ const TeacherAssignmentsPage = () => {
                       {item.class_name} | {item.section_name} | {item.subject_name}
                     </div>
                   </div>
-                  <div className="text-xs text-ink-500">Due: {item.due_date || 'TBD'}</div>
                 </div>
                 <div className="mt-3 text-sm text-ink-600">{item.description || 'No description'}</div>
+                {item.file_url ? (
+                  <a href={resolveFileUrl(item.file_url)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold text-brand-600">
+                    Open File
+                  </a>
+                ) : null}
               </div>
             ))}
           </div>
@@ -232,4 +244,4 @@ const TeacherAssignmentsPage = () => {
   );
 };
 
-export default TeacherAssignmentsPage;
+export default TeacherMaterialsPage;

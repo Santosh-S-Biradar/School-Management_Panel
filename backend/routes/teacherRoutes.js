@@ -10,15 +10,19 @@ router.use(auth, role(ROLES.TEACHER));
 
 router.get('/dashboard', teacher.dashboard);
 router.get('/assigned-classes', teacher.assignedClasses);
+router.get('/subjects', teacher.listSubjects);
 router.get('/timetable', teacher.timetable);
 router.get('/exams', teacher.listExams);
 router.get('/exam-subjects', teacher.listExamSubjects);
 router.get('/marks-sheet', teacher.marksSheet);
+router.get('/assignments', teacher.listAssignments);
+router.get('/materials', teacher.listMaterials);
 router.get('/students', teacher.listStudentsByClass);
 router.post('/attendance', teacher.markAttendance);
 router.post('/assignments', teacher.uploadAssignment);
 router.post('/materials', teacher.uploadMaterial);
 router.post('/marks', teacher.enterMarks);
+router.post('/notifications', teacher.createNotification);
 router.get('/performance/:studentId', teacher.studentPerformance);
 router.get('/notifications', teacher.notifications);
 

@@ -132,7 +132,7 @@ CREATE TABLE attendance (
 CREATE TABLE assignments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   class_id INT NOT NULL,
-  section_id INT NOT NULL,
+  section_id INT NULL,
   subject_id INT NOT NULL,
   teacher_id INT NOT NULL,
   title VARCHAR(120) NOT NULL,
