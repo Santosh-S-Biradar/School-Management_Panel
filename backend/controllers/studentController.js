@@ -33,6 +33,51 @@ const profile = async (req, res, next) => {
   }
 };
 
+const updateProfile = async (req, res, next) => {
+  try {
+    const rows = await query('SELECT id FROM students WHERE user_id = ? LIMIT 1', [req.user.id]);
+    if (!rows[0]) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const userPayload = {
+      name: req.body.name,
+      phone: req.body.phone
+    };
+    Object.keys(userPayload).forEach((key) => userPayload[key] === undefined && delete userPayload[key]);
+    if (Object.keys(userPayload).length) {
+      await query(
+        `UPDATE users
+         SET ${Object.keys(userPayload).map((field) => `${field} = ?`).join(', ')}
+         WHERE id = ?`,
+        [...Object.values(userPayload), req.user.id]
+      );
+    }
+
+    const studentPayload = {
+      dob: req.body.dob,
+      gender: req.body.gender,
+      address: req.body.address
+    };
+    Object.keys(studentPayload).forEach((key) => studentPayload[key] === undefined && delete studentPayload[key]);
+    if (Object.keys(studentPayload).length) {
+      await query(
+        `UPDATE students
+         SET ${Object.keys(studentPayload).map((field) => `${field} = ?`).join(', ')}
+         WHERE id = ?`,
+        [...Object.values(studentPayload), rows[0].id]
+      );
+    }
+
+    if (!Object.keys(userPayload).length && !Object.keys(studentPayload).length) {
+      return res.status(400).json({ message: 'No profile fields to update' });
+    }
+
+    res.json({ message: 'Profile updated' });
+  } catch (err) {
+    next(err);
+  }
+};
 const timetable = async (req, res, next) => {
   try {
     const student = await query('SELECT class_id, section_id FROM students WHERE user_id = ? LIMIT 1', [req.user.id]);
@@ -90,6 +135,7 @@ const notifications = async (req, res, next) => {
 module.exports = {
   dashboard,
   profile,
+  updateProfile,
   timetable,
   attendance,
   assignments,
@@ -97,3 +143,5 @@ module.exports = {
   materials,
   notifications
 };
+
+

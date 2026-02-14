@@ -10,6 +10,7 @@ router.use(auth, role(ROLES.STUDENT));
 
 router.get('/dashboard', student.dashboard);
 router.get('/profile', student.profile);
+router.put('/profile', student.updateProfile);
 router.get('/timetable', student.timetable);
 router.get('/attendance', student.attendance);
 router.get('/assignments', student.assignments);
@@ -18,3 +19,4 @@ router.get('/materials', student.materials);
 router.get('/notifications', student.notifications);
 
 module.exports = router;
+

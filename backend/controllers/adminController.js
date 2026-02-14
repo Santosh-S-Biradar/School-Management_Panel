@@ -732,6 +732,40 @@ const reportTeachers = async (req, res, next) => {
   }
 };
 
+const profile = async (req, res, next) => {
+  try {
+    const rows = await query(
+      `SELECT u.id, u.name, u.email, u.phone, u.status, r.name AS role
+       FROM users u
+       JOIN roles r ON r.id = u.role_id
+       WHERE u.id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+    res.json(rows[0] || null);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const payload = {
+      name: req.body.name,
+      phone: req.body.phone
+    };
+
+    Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({ message: 'No profile fields to update' });
+    }
+
+    await userModel.updateUser(req.user.id, payload);
+    res.json({ message: 'Profile updated' });
+  } catch (err) {
+    next(err);
+  }
+};
 module.exports = {
   dashboardStats,
   createStudent,
@@ -782,6 +816,10 @@ module.exports = {
   updateNotification,
   deleteNotification,
   listNotifications,
+  profile,
+  updateProfile,
   reportStudents,
   reportTeachers
 };
+
+

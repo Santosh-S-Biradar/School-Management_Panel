@@ -614,8 +614,70 @@ const marksSheet = async (req, res, next) => {
   }
 };
 
+const profile = async (req, res, next) => {
+  try {
+    const rows = await query(
+      `SELECT t.id, t.employee_no, t.department, t.qualification, u.name, u.email, u.phone
+       FROM teachers t
+       JOIN users u ON u.id = t.user_id
+       WHERE t.user_id = ?
+       LIMIT 1`,
+      [req.user.id]
+    );
+    res.json(rows[0] || null);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const teacher = await query('SELECT id FROM teachers WHERE user_id = ? LIMIT 1', [req.user.id]);
+    if (!teacher[0]) {
+      return res.status(404).json({ message: 'Teacher profile not found' });
+    }
+
+    const userPayload = {
+      name: req.body.name,
+      phone: req.body.phone
+    };
+    Object.keys(userPayload).forEach((key) => userPayload[key] === undefined && delete userPayload[key]);
+    if (Object.keys(userPayload).length) {
+      await query(
+        `UPDATE users
+         SET ${Object.keys(userPayload).map((field) => `${field} = ?`).join(', ')}
+         WHERE id = ?`,
+        [...Object.values(userPayload), req.user.id]
+      );
+    }
+
+    const teacherPayload = {
+      department: req.body.department,
+      qualification: req.body.qualification
+    };
+    Object.keys(teacherPayload).forEach((key) => teacherPayload[key] === undefined && delete teacherPayload[key]);
+    if (Object.keys(teacherPayload).length) {
+      await query(
+        `UPDATE teachers
+         SET ${Object.keys(teacherPayload).map((field) => `${field} = ?`).join(', ')}
+         WHERE id = ?`,
+        [...Object.values(teacherPayload), teacher[0].id]
+      );
+    }
+
+    if (!Object.keys(userPayload).length && !Object.keys(teacherPayload).length) {
+      return res.status(400).json({ message: 'No profile fields to update' });
+    }
+
+    res.json({ message: 'Profile updated' });
+  } catch (err) {
+    next(err);
+  }
+};
 module.exports = {
   dashboard,
+  profile,
+  updateProfile,
   assignedClasses,
   listSubjects,
   timetable,
@@ -633,3 +695,5 @@ module.exports = {
   listStudentsByClass,
   notifications
 };
+
+

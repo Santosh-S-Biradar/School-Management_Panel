@@ -9,6 +9,8 @@ const router = express.Router();
 router.use(auth, role(ROLES.TEACHER));
 
 router.get('/dashboard', teacher.dashboard);
+router.get('/profile', teacher.profile);
+router.put('/profile', teacher.updateProfile);
 router.get('/assigned-classes', teacher.assignedClasses);
 router.get('/subjects', teacher.listSubjects);
 router.get('/timetable', teacher.timetable);
@@ -27,3 +29,4 @@ router.get('/performance/:studentId', teacher.studentPerformance);
 router.get('/notifications', teacher.notifications);
 
 module.exports = router;
+

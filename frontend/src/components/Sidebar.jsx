@@ -1,5 +1,19 @@
 import { NavLink } from 'react-router-dom';
-import { BookOpen, CalendarDays, GraduationCap, LayoutDashboard, Users, NotebookPen, ClipboardList, Bell, Wallet, UserSquare2 } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarDays,
+  GraduationCap,
+  LayoutDashboard,
+  Users,
+  NotebookPen,
+  ClipboardList,
+  Bell,
+  Wallet,
+  UserSquare2,
+  UserCircle2,
+  FilePenLine,
+  FolderOpen
+} from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,7 +27,10 @@ const iconMap = {
   exams: NotebookPen,
   attendance: ClipboardList,
   fees: Wallet,
-  notifications: Bell
+  notifications: Bell,
+  profile: UserCircle2,
+  assignments: FilePenLine,
+  materials: FolderOpen
 };
 
 const menuByRole = {
@@ -27,7 +44,8 @@ const menuByRole = {
     { key: 'exams', label: 'Exams & Grades', to: '/admin/exams' },
     { key: 'fees', label: 'Fees', to: '/admin/fees' },
     { key: 'attendance', label: 'Attendance', to: '/admin/attendance' },
-    { key: 'notifications', label: 'Notifications', to: '/admin/notifications' }
+    { key: 'notifications', label: 'Notifications', to: '/admin/notifications' },
+    { key: 'profile', label: 'Profile', to: '/admin/profile' }
   ],
   teacher: [
     { key: 'dashboard', label: 'Dashboard', to: '/teacher' },
@@ -35,25 +53,28 @@ const menuByRole = {
     { key: 'subjects', label: 'Subjects', to: '/teacher/subjects' },
     { key: 'attendance', label: 'Attendance', to: '/teacher/attendance' },
     { key: 'exams', label: 'Marks & Grades', to: '/teacher/marks' },
-    { key: 'subjects', label: 'Assignments', to: '/teacher/assignments' },
-    { key: 'subjects', label: 'Materials', to: '/teacher/materials' },
-    { key: 'notifications', label: 'Notifications', to: '/teacher/notifications' }
+    { key: 'assignments', label: 'Assignments', to: '/teacher/assignments' },
+    { key: 'materials', label: 'Materials', to: '/teacher/materials' },
+    { key: 'notifications', label: 'Notifications', to: '/teacher/notifications' },
+    { key: 'profile', label: 'Profile', to: '/teacher/profile' }
   ],
   student: [
     { key: 'dashboard', label: 'Dashboard', to: '/student' },
     { key: 'timetable', label: 'Timetable', to: '/student/timetable' },
     { key: 'attendance', label: 'Attendance', to: '/student/attendance' },
-    { key: 'subjects', label: 'Assignments', to: '/student/assignments' },
+    { key: 'assignments', label: 'Assignments', to: '/student/assignments' },
     { key: 'exams', label: 'Marks & Grades', to: '/student/marks' },
-    { key: 'subjects', label: 'Materials', to: '/student/materials' },
-    { key: 'notifications', label: 'Notifications', to: '/student/notifications' }
+    { key: 'materials', label: 'Materials', to: '/student/materials' },
+    { key: 'notifications', label: 'Notifications', to: '/student/notifications' },
+    { key: 'profile', label: 'Profile', to: '/student/profile' }
   ],
   parent: [
     { key: 'dashboard', label: 'Dashboard', to: '/parent' },
     { key: 'attendance', label: 'Attendance', to: '/parent/attendance' },
     { key: 'exams', label: 'Performance', to: '/parent/performance' },
     { key: 'fees', label: 'Fees', to: '/parent/fees' },
-    { key: 'notifications', label: 'Notifications', to: '/parent/notifications' }
+    { key: 'notifications', label: 'Notifications', to: '/parent/notifications' },
+    { key: 'profile', label: 'Profile', to: '/parent/profile' }
   ]
 };
 

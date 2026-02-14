@@ -11,6 +11,11 @@ const router = express.Router();
 router.use(auth, role(ROLES.ADMIN));
 
 router.get('/dashboard', admin.dashboardStats);
+router.get('/profile', admin.profile);
+router.put('/profile', [
+  body('name').optional().notEmpty(),
+  body('phone').optional({ nullable: true }).isString()
+], validate, admin.updateProfile);
 
 router.post('/students', [
   body('name').notEmpty(),
@@ -132,3 +137,4 @@ router.get('/reports/students', admin.reportStudents);
 router.get('/reports/teachers', admin.reportTeachers);
 
 module.exports = router;
+

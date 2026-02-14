@@ -40,9 +40,40 @@ const getParentChildren = async (parentId) => {
   );
 };
 
+
+const updateParent = async (id, payload) => {
+  const fields = [];
+  const values = [];
+  Object.entries(payload).forEach(([key, value]) => {
+    fields.push(`${key} = ?`);
+    values.push(value);
+  });
+  if (!fields.length) return false;
+
+  values.push(id);
+  await query(`UPDATE parents SET ${fields.join(', ')} WHERE id = ?`, values);
+  return true;
+};
+
+const updateParentUser = async (userId, payload) => {
+  const fields = [];
+  const values = [];
+  Object.entries(payload).forEach(([key, value]) => {
+    fields.push(`${key} = ?`);
+    values.push(value);
+  });
+  if (!fields.length) return false;
+
+  values.push(userId);
+  await query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, values);
+  return true;
+};
 module.exports = {
   createParent,
   linkParentToStudent,
   getParentByUserId,
-  getParentChildren
+  getParentChildren,
+  updateParent,
+  updateParentUser
 };
+

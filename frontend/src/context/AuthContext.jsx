@@ -33,6 +33,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateCurrentUser = (updates) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...(updates || {}) };
+      localStorage.setItem('smp_user', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -40,7 +48,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('smp_user');
   };
 
-  const value = useMemo(() => ({ token, user, loading, login, logout }), [token, user, loading]);
+  const value = useMemo(
+    () => ({ token, user, loading, login, logout, updateCurrentUser }),
+    [token, user, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
